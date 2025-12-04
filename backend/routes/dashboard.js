@@ -11,14 +11,12 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const role = req.user.role;
     let stats = {};
 
-    const conn = await pool.getConnection();
-
     if (role === 'mahasiswa') {
-      const [groups] = await conn.execute(
+      const [groups] = await pool.query(
         'SELECT COUNT(*) as count FROM groups WHERE user_id = ?',
         [userId]
       );
-      const [reports] = await conn.execute(
+      const [reports] = await pool.query(
         'SELECT COUNT(*) as count FROM reports WHERE user_id = ?',
         [userId]
       );
@@ -29,15 +27,15 @@ router.get('/stats', authenticateToken, async (req, res) => {
         hariTersisa: '15'
       };
     } else if (role === 'dosen') {
-      const [groups] = await conn.execute(
+      const [groups] = await pool.query(
         'SELECT COUNT(DISTINCT group_id) as count FROM group_mentors WHERE mentor_id = ?',
         [userId]
       );
-      const [students] = await conn.execute(
+      const [students] = await pool.query(
         'SELECT COUNT(*) as count FROM group_members WHERE group_id IN (SELECT group_id FROM group_mentors WHERE mentor_id = ?)',
         [userId]
       );
-      const [reports] = await conn.execute(
+      const [reports] = await pool.query(
         'SELECT COUNT(*) as count FROM reports WHERE status = "approved" AND group_id IN (SELECT group_id FROM group_mentors WHERE mentor_id = ?)',
         [userId]
       );
@@ -48,10 +46,10 @@ router.get('/stats', authenticateToken, async (req, res) => {
         menungguReview: 5
       };
     } else if (role === 'admin') {
-      const [users] = await conn.execute('SELECT COUNT(*) as count FROM users WHERE role = "mahasiswa"');
-      const [groups] = await conn.execute('SELECT COUNT(*) as count FROM groups');
-      const [locations] = await conn.execute('SELECT COUNT(*) as count FROM locations');
-      const [programs] = await conn.execute('SELECT COUNT(*) as count FROM programs');
+      const [users] = await pool.query('SELECT COUNT(*) as count FROM users WHERE role = "mahasiswa"');
+      const [groups] = await pool.query('SELECT COUNT(*) as count FROM groups');
+      const [locations] = await pool.query('SELECT COUNT(*) as count FROM locations');
+      const [programs] = await pool.query('SELECT COUNT(*) as count FROM programs');
       
       stats = {
         totalMahasiswa: users[0].count,
@@ -61,7 +59,6 @@ router.get('/stats', authenticateToken, async (req, res) => {
       };
     }
 
-    conn.release();
     res.json(stats);
   } catch (error) {
     console.error('Stats error:', error);
@@ -72,9 +69,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
 // Get user profile
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const conn = await pool.getConnection();
-    const [users] = await conn.execute('SELECT id, name, email, role, nim_nip FROM users WHERE id = ?', [req.user.id]);
-    conn.release();
+    const [users] = await pool.query('SELECT id, name, email, role, nim_nip FROM users WHERE id = ?', [req.user.id]);
 
     if (users.length === 0) {
       return res.status(404).json({ message: 'User not found' });

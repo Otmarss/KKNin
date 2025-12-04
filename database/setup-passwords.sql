@@ -1,4 +1,20 @@
+-- Setup password untuk demo users
+-- Password: test123 (di-hash dengan bcrypt)
+
 USE kknin_db;
-UPDATE users SET password = '\\\.3K4x1mY2z5K6L7M8N9O0P1Q2R3S4T5U' WHERE email = 'ahmad.rizki@student.ac.id';
-UPDATE users SET password = '\\\.3K4x1mY2z5K6L7M8N9O0P1Q2R3S4T5U' WHERE email = 'siti.nurhaida@university.ac.id';
-UPDATE users SET password = '\\\.3K4x1mY2z5K6L7M8N9O0P1Q2R3S4T5U' WHERE email = 'budi.admin@university.ac.id';
+
+-- Ahmad Rizki (Mahasiswa)
+UPDATE users SET password = '$2a$10$KHYEbNxGbobFiwABDgxhj..pGjYwxpTNYEloegrqHjXIDMwnkEwsG' 
+WHERE email = 'ahmad.rizki@student.ac.id';
+
+-- Dr. Siti Nurhaida (Dosen Pembimbing)
+UPDATE users SET password = '$2a$10$KHYEbNxGbobFiwABDgxhj..pGjYwxpTNYEloegrqHjXIDMwnkEwsG' 
+WHERE email = 'siti.nurhaida@university.ac.id';
+
+-- Budi Santoso (Admin)
+UPDATE users SET password = '$2a$10$KHYEbNxGbobFiwABDgxhj..pGjYwxpTNYEloegrqHjXIDMwnkEwsG' 
+WHERE email = 'budi.admin@university.ac.id';
+
+-- Verify
+SELECT 'Passwords updated successfully!' as message;
+

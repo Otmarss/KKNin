@@ -14,22 +14,18 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    const conn = await pool.getConnection();
-    
     // Check if email exists
-    const [existing] = await conn.execute('SELECT id FROM users WHERE email = ?', [email]);
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
-      conn.release();
       return res.status(409).json({ message: 'Email already registered' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await conn.execute(
+    const [result] = await pool.query(
       'INSERT INTO users (name, email, password, role, nim_nip) VALUES (?, ?, ?, ?, ?)',
       [name, email, hashedPassword, role, nim_nip || null]
     );
 
-    conn.release();
     res.status(201).json({ message: 'User registered successfully', userId: result.insertId });
   } catch (error) {
     console.error('Register error:', error);
@@ -46,9 +42,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password required' });
     }
 
-    const conn = await pool.getConnection();
-    const [users] = await conn.execute('SELECT * FROM users WHERE email = ?', [email]);
-    conn.release();
+    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
 
     if (users.length === 0) {
       return res.status(401).json({ message: 'Invalid email or password' });
