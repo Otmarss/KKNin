@@ -67,8 +67,10 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  const msg = `🚀 Backend server running on http://0.0.0.0:${PORT}`;
+  console.log(msg);
+  console.log(`📝 Listening on all interfaces, port ${PORT}`);
 });
 
 server.on('error', (err) => {
@@ -77,4 +79,21 @@ server.on('error', (err) => {
     fs.appendFileSync(p, `${new Date().toISOString()} - SERVER_ERROR ${err.stack}\n`);
   } catch (e) {}
   console.error('Server error', err);
+});
+
+// Keep process alive and handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
