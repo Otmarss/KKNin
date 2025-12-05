@@ -8,6 +8,7 @@ import ManajemenMahasiswaPage from './pages/ManajemenMahasiswaPage'
 import Sidebar from './components/Sidebar'
 import './styles.css'
 import './styles/pages.css'
+import ReportsPage from './pages/ReportsPage'
 
 function AppContent() {
   const { user } = useAuth()
@@ -36,6 +37,8 @@ function AppContent() {
       switch (currentPage) {
         case 'manajemen':
           return <ManajemenMahasiswaPage />
+        case 'reports':
+          return <ReportsPage />
         default:
           return <DashboardPage role={user.role} />
       }

@@ -220,3 +220,27 @@ router.get('/reports', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
+
+// Update report status (approve/reject) - accessible by dosen/admin
+router.put('/reports/:reportId/status', authenticateToken, async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const { status } = req.body;
+    const role = req.user.role;
+
+    if (!['approved', 'rejected', 'submitted', 'draft'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    if (role !== 'dosen' && role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    await pool.query('UPDATE reports SET status = ? , updated_at = NOW() WHERE id = ?', [status, reportId]);
+
+    res.json({ message: 'Report status updated' });
+  } catch (error) {
+    console.error('Update report status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});

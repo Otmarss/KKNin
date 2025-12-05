@@ -13,12 +13,14 @@ export default function Sidebar({ role, currentPage, setCurrentPage }) {
     } else if (user?.role === 'dosen') {
       return [
         { label: 'Dashboard', page: 'dashboard' },
-        { label: 'Bimbingan', page: 'bimbingan' }
+        { label: 'Bimbingan', page: 'bimbingan' },
+        { label: 'Laporan', page: 'reports' }
       ]
     } else if (user?.role === 'admin') {
       return [
         { label: 'Dashboard', page: 'dashboard' },
-        { label: 'Manajemen Mahasiswa', page: 'manajemen' }
+        { label: 'Manajemen Mahasiswa', page: 'manajemen' },
+        { label: 'Laporan', page: 'reports' }
       ]
     }
     return [{ label: 'Dashboard', page: 'dashboard' }]

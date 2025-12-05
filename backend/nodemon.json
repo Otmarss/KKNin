@@ -1,0 +1,14 @@
+{
+  "ignore": [
+    "*.log",
+    "logs/*",
+    "**/*.log",
+    "C:\\kknin-debug.log"
+  ],
+  "watch": [
+    "routes",
+    "config",
+    "middleware",
+    "server.js"
+  ]
+}

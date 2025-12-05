@@ -1,6 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 const pool = require('../config/database');
 
 const router = express.Router();
@@ -42,24 +44,60 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password required' });
     }
 
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    // Temporary debug log for login attempts
+    try {
+      console.log(`[auth] Login attempt for: ${email}`);
+      const dbgPath = path.join(__dirname, '..', 'debug-login.log');
+      fs.appendFileSync(dbgPath, `${new Date().toISOString()} - Login attempt for: ${email}\n`);
+      // Also write to a fixed location to ensure we can read it from outside
+      try { fs.appendFileSync('C:\\kknin-debug.log', `${new Date().toISOString()} - Login attempt for: ${email}\n`); } catch(e) { /* ignore */ }
+    } catch (e) {
+      console.error('[auth] Failed to write debug log', e);
+    }
 
-    if (users.length === 0) {
+    // Step 1: fetch user
+    let users;
+    try {
+      [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    } catch (e) {
+      console.error('[auth] DB error:', e);
+      try { fs.appendFileSync('C:\\kknin-debug.log', `${new Date().toISOString()} - DB error: ${e.message}\n`); } catch(_) {}
+      return res.status(500).json({ message: 'DB error', detail: e.message });
+    }
+
+    if (!users || users.length === 0) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const user = users[0];
-    const validPassword = await bcrypt.compare(password, user.password);
+
+    // Step 2: verify password
+    let validPassword;
+    try {
+      validPassword = await bcrypt.compare(password, user.password);
+    } catch (e) {
+      console.error('[auth] bcrypt error:', e);
+      try { fs.appendFileSync('C:\\kknin-debug.log', `${new Date().toISOString()} - bcrypt error: ${e.message}\n`); } catch(_) {}
+      return res.status(500).json({ message: 'Password verification error', detail: e.message });
+    }
 
     if (!validPassword) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    // Step 3: sign token
+    let token;
+    try {
+      token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+    } catch (e) {
+      console.error('[auth] JWT sign error:', e);
+      try { fs.appendFileSync('C:\\kknin-debug.log', `${new Date().toISOString()} - JWT sign error: ${e.message}\n`); } catch(_) {}
+      return res.status(500).json({ message: 'Token creation error', detail: e.message });
+    }
 
     res.json({
       message: 'Login successful',
@@ -68,7 +106,14 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    try {
+      const dbgPath = path.join(__dirname, '..', 'debug-login.log');
+      fs.appendFileSync(dbgPath, `${new Date().toISOString()} - ERROR: ${error.stack || error}\n`);
+      try { fs.appendFileSync('C:\\kknin-debug.log', `${new Date().toISOString()} - ERROR: ${error.stack || error}\n`); } catch(e) { /* ignore */ }
+    } catch (e) {
+      console.error('[auth] Failed to write error log', e);
+    }
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
